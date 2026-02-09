@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Valentine?</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+
+<style>
+* {
+  box-sizing: border-box;
+  font-family: 'Inter', sans-serif;
+}
+
+body {
+  margin: 0;
+  height: 100vh;
+  background: #fdecef;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+.card {
+  background: white;
+  width: 420px;
+  padding: 50px 40px;
+  border-radius: 24px;
+  text-align: center;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+  position: relative;
+}
+
+.emoji {
+  font-size: 48px;
+  margin-bottom: 20px;
+}
+
+h1 {
+  font-size: 28px;
+  font-weight: 800;
+  margin-bottom: 40px;
+}
+
+.buttons {
+  position: relative;
+  height: 90px;
+}
+
+button {
+  border: none;
+  cursor: pointer;
+  border-radius: 14px;
+  transition: all 0.25s ease;
+}
+
+#yes {
+  background: #ec4c72;
+  color: white;
+  padding: 16px 34px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+#no {
+  background: #f2f2f2;
+  color: #333;
+  padding: 14px 26px;
+  font-size: 15px;
+  position: absolute;
+}
+
+.hint {
+  margin-top: 25px;
+  font-size: 14px;
+  color: #ff6f91;
+  font-style: italic;
+}
+
+canvas {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+</style>
+</head>
+
+<body>
+
+<canvas id="confetti"></canvas>
+
+<div class="card" id="card">
+  <div class="emoji">💘</div>
+  <h1>Will you be my valentine?</h1>
+
+  <div class="buttons">
+    <button id="yes">Yes ✨</button>
+    <button id="no">No</button>
+  </div>
+
+  <div class="hint">You can't escape love!</div>
+</div>
+
+<script>
+const noBtn = document.getElementById("no");
+const yesBtn = document.getElementById("yes");
+const card = document.getElementById("card");
+
+let noScale = 1;
+let yesScale = 1;
+
+// Move No inside card
+function moveNoButton() {
+  const cardRect = card.getBoundingClientRect();
+  const noRect = noBtn.getBoundingClientRect();
+
+  const maxX = cardRect.width - noRect.width - 20;
+  const maxY = cardRect.height - noRect.height - 100;
+
+  noBtn.style.left = Math.random() * maxX + "px";
+  noBtn.style.top = Math.random() * maxY + "px";
+  noBtn.style.transform = `scale(${noScale})`;
+}
+
+function handleMove(x, y) {
+  const rect = noBtn.getBoundingClientRect();
+  const dist = Math.hypot(
+    x - (rect.left + rect.width / 2),
+    y - (rect.top + rect.height / 2)
+  );
+  if (dist < 100) moveNoButton();
+}
+
+document.addEventListener("mousemove", e => handleMove(e.clientX, e.clientY));
+document.addEventListener("touchmove", e => {
+  const t = e.touches[0];
+  handleMove(t.clientX, t.clientY);
+});
+
+noBtn.addEventListener("click", () => {
+  noScale -= 0.15;
+  yesScale += 0.15;
+
+  if (noScale <= 0.1) {
+    noBtn.remove();
+    yesBtn.style.transform = "scale(3)";
+    yesBtn.textContent = "YES 💖💖💖";
+    return;
+  }
+
+  yesBtn.style.transform = `scale(${yesScale})`;
+  moveNoButton();
+});
+
+// Confetti
+const canvas = document.getElementById("confetti");
+const ctx = canvas.getContext("2d");
+canvas.width = innerWidth;
+canvas.height = innerHeight;
+
+let confetti = [];
+
+function popConfetti() {
+  confetti = Array.from({ length: 150 }, () => ({
+    x: Math.random() * canvas.width,
+    y: -10,
+    r: Math.random() * 6 + 4,
+    c: `hsl(${Math.random() * 360},100%,60%)`,
+    s: Math.random() * 3 + 2
+  }));
+  animateConfetti();
+}
+
+function animateConfetti() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  confetti.forEach(p => {
+    p.y += p.s;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+    ctx.fillStyle = p.c;
+    ctx.fill();
+  });
+  confetti = confetti.filter(p => p.y < canvas.height);
+  if (confetti.length) requestAnimationFrame(animateConfetti);
+}
+
+// YES click
+yesBtn.addEventListener("click", () => {
+  popConfetti();
+  setTimeout(() => {
+    document.body.innerHTML = `
+      <h1 style="
+        font-family: Inter;
+        font-size: 56px;
+        color: #ec4c72;
+        text-align: center;
+      ">
+        Knew you'd say yes 💖
+      </h1>
+    `;
+  }, 1000);
+});
+</script>
+
+</body>
+</html>
